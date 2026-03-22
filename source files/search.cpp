@@ -1,7 +1,9 @@
 #include "search.h"
 #include <queue>
 #include <unordered_map>
+#include <unordered_set>
 #include <iostream>
+#include <functional>
 
 // BFS finds the shortest path (fewest connections) between two cities.
 // We also check that the path length is under maxConnections.
@@ -56,4 +58,69 @@ std::vector<std::string> question1(const Graph& g,
 
     // No path found within the connection limit
     return {};
+}
+
+std::vector<std::string> question3(const Graph& g, const std::string& cityA) {
+    if (!g.hasCity(cityA)) {
+        return {};
+    }
+
+    std::unordered_set<std::string> reachable;
+    std::queue<std::string> q;
+    q.push(cityA);
+    reachable.insert(cityA);
+
+    while (!q.empty()) {
+        std::string current = q.front();
+        q.pop();
+
+        for (const std::string& next : g.getNeighbors(current)) {
+            if (reachable.insert(next).second) {
+                q.push(next);
+            }
+        }
+    }
+
+
+
+    // Serene Plummer - Question 3: Find a route that visits all reachable cities and returns to start, with as few connections as possible. 
+    std::unordered_set<std::string> visited;
+    std::vector<std::string> path;
+    std::vector<std::string> bestPath;
+
+    std::function<void(const std::string&)> dfs = [&](const std::string& current) {
+        if (!bestPath.empty() && path.size() >= bestPath.size()) {
+            return;
+        }
+
+        if (visited.size() == reachable.size()) {
+            for (const std::string& next : g.getNeighbors(current)) {
+                if (next == cityA) {
+                    std::vector<std::string> candidate = path;
+                    candidate.push_back(cityA);
+                    if (bestPath.empty() || candidate.size() < bestPath.size()) {
+                        bestPath = candidate;
+                    }
+                    break;
+                }
+            }
+            return;
+        }
+
+        for (const std::string& next : g.getNeighbors(current)) {
+            if (reachable.count(next) && !visited.count(next)) {
+                visited.insert(next);
+                path.push_back(next);
+                dfs(next);
+                path.pop_back();
+                visited.erase(next);
+            }
+        }
+    };
+
+    visited.insert(cityA);
+    path.push_back(cityA);
+    dfs(cityA);
+
+    return bestPath;
 }

@@ -41,20 +41,26 @@ int main(int argc, char* argv[]) {
             printPath(path);
             std::cout << "Total connections: " << path.size() - 1 << std::endl;
         }
-    }
-    // Add else if blocks for questions 2, 3, 4 here.
-    // Question 3 owner: Serene Plummer.
-    vector<string> route = question3(graph, startCity);
-    if (route.empty()){
-        cout << "No route found." << endl;
-    } else {
-        for (size_t i = 0; i < route.size(); i++){
-            cout << route[i];
-            if (i + 1 < route.size()) cout << " -> ";
+    } else if (question == 3) {
+        // Question 3 owner: Serene Plummer.
+        if (argc < 3) {
+            std::cerr << "Usage: routeSearch 3 <city_A>" << std::endl;
+            return 1;
         }
-        cout << "\nSmallest number of connections (hops): " << route.size() - 1 << endl;
+
+        std::string startCity = argv[2];
+        std::vector<std::string> route = question3(g, startCity);
+
+        if (route.empty()) {
+            std::cout << "No route found." << std::endl;
+        } else {
+            printPath(route);
+            std::cout << "Smallest number of connections (hops): " << route.size() - 1 << std::endl;
+        }
+    } else {
+        std::cerr << "Unsupported question number: " << question << std::endl;
+        return 1;
     }
-    
 
     return 0;
 }
