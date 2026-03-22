@@ -10,6 +10,7 @@
 #include <string>
 #include <fstream>
 #include <map>
+#include <functional>
 
 using namespace std;
 
@@ -20,6 +21,8 @@ class Graph{
 
           void print();
           void addEdge(int node1, int node2){ adj[node1][node2] = 1; };
+        bool hasEdge(int node1, int node2) const { return adj[node1][node2] == 1; }
+        int size() const { return n; }
      private: 
           int n;
           int adj[140][140]; // You may want to use adjacent list implementation for sparse graph instead
@@ -46,6 +49,93 @@ void Graph::print(){
     }
 
 };
+
+/***********************************************************
+   Q3 - Serene Plummer
+   1. Start at City A
+   2. Visit every city reachable from City A (directed flight edges)
+   3. Return to City A at the end
+   4. Do it with as few connections (hops) as possible
+***********************************************************/
+
+void SolveQ3(Graph& graph, int startID, int n, map<const string, int, strCmp>& city){
+    if (startID < 0 || startID >= n || n > graph.size()){
+        cout << "Q3 error: invalid start city or graph size." << endl;
+        return;
+    }
+
+    vector<bool> reachable(n, false);
+    function<void(int)> markReachable = [&](int current){
+        reachable[current] = true;
+        for (int next = 0; next < n; next++){
+            if (graph.hasEdge(current, next) && !reachable[next]){
+                markReachable(next);
+            }
+        }
+    };
+    markReachable(startID);
+
+    int numReachable = 0;
+    for (int i = 0; i < n; i++){
+        if (reachable[i]) numReachable++;
+    }
+
+    vector<bool> visited(n, false);
+    vector<int> route;
+
+    function<bool(int, int)> dfs = [&](int current, int visitedCount){
+        route.push_back(current);
+        visited[current] = true;
+
+        // Base case: visited all reachable cities and can return to start.
+        if (visitedCount == numReachable){
+            if (graph.hasEdge(current, startID)){
+                route.push_back(startID);
+                return true;
+            }
+            visited[current] = false;
+            route.pop_back();
+            return false;
+        }
+
+        for (int next = 0; next < n; next++){
+            if (reachable[next] && graph.hasEdge(current, next) && !visited[next]){
+                if (dfs(next, visitedCount + 1)){
+                    return true;
+                }
+            }
+        }
+
+        visited[current] = false;
+        route.pop_back();
+        return false;
+    };
+
+    bool found = dfs(startID, 1);
+
+    //find city name by id helper 
+    auto cityName = [&](int id) -> string{
+        for (auto it = city.begin(); it != city.end(); it++){
+            if (it->second == id) return it->first;
+        return "Unknown";
+        }
+    };
+
+    cout << endl << "Q3 Route from City " << cityName(startID) << ": " << endl;
+    if (!found){
+        cout << "No route visits all reachable cities and returns to start." << endl;
+        return;
+    }
+
+    for (size_t i = 0; i < route.size(); i++){
+        cout << route[i];
+        if (i + 1 < route.size()) cout << " -> ";
+    }
+    cout << endl;
+    cout << "Smallest number of connections (hops): " << route.size() - 1 << endl;
+}
+
+
 
 
 struct strCmp {
@@ -107,4 +197,7 @@ int main(int argc, char *argv[]){
    cout << endl << "The graph generated can be represented by the following adjacent matrix : " << endl;
    cout << "-----------------------------------------------------------------------------------" << endl;
    graph.print();
+
+    // Q3 (Serene Plummer): start from City A (ID 0).
+    SolveQ3(graph, 0, n);
 }

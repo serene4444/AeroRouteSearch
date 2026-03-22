@@ -12,13 +12,20 @@ std::vector<std::string> question1(const Graph& g,
                                    const std::string& cityB,
                                    int maxConnections);
 
-// Q2-Q4 stubs — you'll implement these next
+// Q2: Shortest path from A to D through B and C.
 std::vector<std::string> question2(const Graph& g,
                                    const std::string& cityA,
                                    const std::string& cityB,
                                    const std::string& cityC,
                                    const std::string& cityD);
 
-// Q3 and Q4 declarations go here...
+// Q3 (Serene Plummer) and Q4 declarations go here...
+std::vector<std::string> question3(const Graph& g, const std::string& cityA);
+
+//Q4 (Serene Plummer) Find meeting city minimizing total connections for 3 people. 
+std::vector<std::string> question4(const Graph& g,
+                                   const std::string& cityA,
+                                   const std::string& cityB,
+                                   const std::string& cityC);
 
 #endif

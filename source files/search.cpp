@@ -37,7 +37,16 @@ std::vector<std::string> question1(const Graph& g,
 
             // Found the destination!
             if (neighbor == cityB) {
-                return newPath;
+                // number of connections in the new path
+                int newConnections = (int)newPath.size() - 1;
+                // Respect the "fewer than maxConnections" requirement
+                if (newConnections < maxConnections) {
+                    return newPath;
+                } else {
+                    // this path reaches the destination but does not satisfy
+                    // the strict "fewer than" constraint, so skip it
+                    continue;
+                }
             }
 
             visited[neighbor] = true;

@@ -42,7 +42,19 @@ int main(int argc, char* argv[]) {
             std::cout << "Total connections: " << path.size() - 1 << std::endl;
         }
     }
-    // Add else if blocks for questions 2, 3, 4 here
+    // Add else if blocks for questions 2, 3, 4 here.
+    // Question 3 owner: Serene Plummer.
+    vector<string> route = question3(graph, startCity);
+    if (route.empty()){
+        cout << "No route found." << endl;
+    } else {
+        for (size_t i = 0; i < route.size(); i++){
+            cout << route[i];
+            if (i + 1 < route.size()) cout << " -> ";
+        }
+        cout << "\nSmallest number of connections (hops): " << route.size() - 1 << endl;
+    }
+    
 
     return 0;
 }
