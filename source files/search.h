@@ -19,7 +19,10 @@ std::vector<std::string> question2(const Graph& g,
                                    const std::string& cityC,
                                    const std::string& cityD);
 
-// Q3 (Serene Plummer) and Q4 declarations go here...
+// Q3 (Serene Plummer) - Find all cities reachable from a starting city
+std::vector<std::string> getReachableCities(const Graph& g, const std::string& cityA);
+
+// Q3 (Serene Plummer) - Find Hamiltonian cycle visiting all reachable cities
 std::vector<std::string> question3(const Graph& g, const std::string& cityA);
 
 //Q4 (Serene Plummer) Find meeting city minimizing total connections for 3 people. 

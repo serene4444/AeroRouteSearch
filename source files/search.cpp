@@ -4,6 +4,7 @@
 #include <unordered_set>
 #include <iostream>
 #include <functional>
+#include <algorithm>
 
 // BFS finds the shortest path (fewest connections) between two cities.
 // We also check that the path length is under maxConnections.
@@ -58,6 +59,33 @@ std::vector<std::string> question1(const Graph& g,
 
     // No path found within the connection limit
     return {};
+}
+
+// Helper function - Serene Plummer Q3: Find all cities reachable from a starting city
+std::vector<std::string> getReachableCities(const Graph& g, const std::string& cityA) {
+    if (!g.hasCity(cityA)) {
+        return {};
+    }
+
+    std::unordered_set<std::string> reachable;
+    std::queue<std::string> q;
+    q.push(cityA);
+    reachable.insert(cityA);
+
+    while (!q.empty()) {
+        std::string current = q.front();
+        q.pop();
+
+        for (const std::string& next : g.getNeighbors(current)) {
+            if (reachable.insert(next).second) {
+                q.push(next);
+            }
+        }
+    }
+
+    std::vector<std::string> result(reachable.begin(), reachable.end());
+    std::sort(result.begin(), result.end());
+    return result;
 }
 
 std::vector<std::string> question3(const Graph& g, const std::string& cityA) {
