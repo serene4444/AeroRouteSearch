@@ -25,6 +25,19 @@ void printPath(const std::vector<std::string>& path) {
     std::cout << "\n" << std::endl;
 }
 
+std::string formatPathForQuestion4(const std::vector<std::string>& path) {
+    std::string output;
+
+    for (size_t i = 0; i < path.size(); ++i) {
+        if (i > 0) {
+            output += " to ";
+        }
+        output += path[i];
+    }
+
+    return output;
+}
+
 int main(int argc, char* argv[]) {
     printHeader("GLOBAL FLIGHT ROUTE SEARCH");
     
@@ -109,9 +122,36 @@ int main(int argc, char* argv[]) {
             std::cout << "  Total Hops: " << route.size() - 1 << std::endl;
             std::cout << std::string(70, '=') << "\n" << std::endl;
         }
+    } else if (question == 4) {
+        // routeSearch 4 <city_A> <city_B> <city_C>
+        if (argc < 5) {
+            std::cerr << "\n  ERROR: Missing required arguments\n" << std::endl;
+            std::cerr << "  Usage: routeSearch 4 <city_A> <city_B> <city_C>\n" << std::endl;
+            return 1;
+        }
+
+        std::string cityA = argv[2];
+        std::string cityB = argv[3];
+        std::string cityC = argv[4];
+
+        Question4Result result = question4(g, cityA, cityB, cityC);
+
+        if (!result.found) {
+            std::cout << "There is no such a city." << std::endl;
+            return 0;
+        }
+
+        std::cout << "You three should meet at " << result.meetingCity << std::endl;
+        std::cout << "Route for first person: " << formatPathForQuestion4(result.routeA)
+                  << " (" << result.routeA.size() - 1 << " connections)" << std::endl;
+        std::cout << "Route for second person: " << formatPathForQuestion4(result.routeB)
+                  << " (" << result.routeB.size() - 1 << " connections)" << std::endl;
+        std::cout << "Route for third person: " << formatPathForQuestion4(result.routeC)
+                  << " (" << result.routeC.size() - 1 << " connections)" << std::endl;
+        std::cout << "Total number of connection: " << result.totalConnections << std::endl;
     } else {
         std::cerr << "\n  ERROR: Unsupported question number: " << question << std::endl;
-        std::cerr << "  Supported: 1 (shortest path), 3 (hamiltonian cycle)\n" << std::endl;
+        std::cerr << "  Supported: 1 (shortest path), 3 (hamiltonian cycle), 4 (best meeting city)\n" << std::endl;
         return 1;
     }
 

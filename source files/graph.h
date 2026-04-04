@@ -15,6 +15,9 @@ public:
     // Return adjacency list (neighbors of city)
     std::vector<std::string> getNeighbors(const std::string& city) const;
 
+    // Returns all known cities in the graph.
+    std::vector<std::string> getAllCities() const;
+
     // Returns true if the city exists in the graph
     bool hasCity(const std::string& city) const;
 

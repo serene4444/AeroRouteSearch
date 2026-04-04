@@ -5,14 +5,20 @@
 
 #include <iostream>
 #include <vector>
-#include <ctime> 
-#include <cstdlib>
 #include <string>
 #include <fstream>
 #include <map>
 #include <functional>
+#include <queue>
+#include <algorithm>
 
 using namespace std;
+
+struct strCmp {
+    bool operator()(const string s1, const string s2) const {
+        return s1 < s2;
+    }
+};
 
 class Graph{
      public:
@@ -49,6 +55,63 @@ void Graph::print(){
     }
 
 };
+
+static string cityNameById(int id, const map<const string, int, strCmp>& city){
+    for (auto it = city.begin(); it != city.end(); it++){
+        if (it->second == id) return it->first;
+    }
+    return "Unknown";
+}
+
+static string formatPathById(const vector<int>& route, const map<const string, int, strCmp>& city) {
+    string output;
+    for (size_t i = 0; i < route.size(); i++) {
+        if (i > 0) output += " to ";
+        output += cityNameById(route[i], city);
+    }
+    return output;
+}
+
+static vector<int> shortestPathById(const Graph& graph, int startID, int endID, int n) {
+    if (startID < 0 || startID >= n || endID < 0 || endID >= n) {
+        return {};
+    }
+
+    vector<bool> visited(n, false);
+    vector<int> parent(n, -1);
+    queue<int> q;
+
+    visited[startID] = true;
+    q.push(startID);
+
+    while (!q.empty()) {
+        int current = q.front();
+        q.pop();
+
+        if (current == endID) {
+            break;
+        }
+
+        for (int next = 0; next < n; next++) {
+            if (graph.hasEdge(current, next) && !visited[next]) {
+                visited[next] = true;
+                parent[next] = current;
+                q.push(next);
+            }
+        }
+    }
+
+    if (!visited[endID]) {
+        return {};
+    }
+
+    vector<int> path;
+    for (int cur = endID; cur != -1; cur = parent[cur]) {
+        path.push_back(cur);
+    }
+    reverse(path.begin(), path.end());
+    return path;
+}
 
 /***********************************************************
    Q3 - Serene Plummer
@@ -113,22 +176,14 @@ void SolveQ3(Graph& graph, int startID, int n, map<const string, int, strCmp>& c
 
     bool found = dfs(startID, 1);
 
-    //find city name by id helper 
-    auto cityName = [&](int id) -> string{
-        for (auto it = city.begin(); it != city.end(); it++){
-            if (it->second == id) return it->first;
-        return "Unknown";
-        }
-    };
-
-    cout << endl << "Q3 Route from City " << cityName(startID) << ": " << endl;
+    cout << endl << "Q3 Route from City " << cityNameById(startID, city) << ": " << endl;
     if (!found){
         cout << "No route visits all reachable cities and returns to start." << endl;
         return;
     }
 
     for (size_t i = 0; i < route.size(); i++){
-        cout << route[i];
+        cout << cityNameById(route[i], city);
         if (i + 1 < route.size()) cout << " -> ";
     }
     cout << endl;
@@ -136,13 +191,76 @@ void SolveQ3(Graph& graph, int startID, int n, map<const string, int, strCmp>& c
 }
 
 
-
-
-struct strCmp {
-    bool operator()( const string s1, const string s2 ) const {
-      return s1 <s2;
+/***********************************************************
+   Q4 - Serene Plummer
+   Find a city different from A/B/C that minimizes
+   the total number of connections from A, B, and C.
+***********************************************************/
+void SolveQ4(Graph& graph,
+             int cityA,
+             int cityB,
+             int cityC,
+             int n,
+             map<const string, int, strCmp>& city) {
+    if (cityA < 0 || cityB < 0 || cityC < 0 ||
+        cityA >= n || cityB >= n || cityC >= n) {
+        cout << "There is no such a city." << endl;
+        return;
     }
-  };
+
+    if (cityA == cityB || cityA == cityC || cityB == cityC) {
+        cout << "There is no such a city." << endl;
+        return;
+    }
+
+    bool found = false;
+    int bestMeeting = -1;
+    int bestTotal = 0;
+    vector<int> bestPathA;
+    vector<int> bestPathB;
+    vector<int> bestPathC;
+
+    for (int meet = 0; meet < n; meet++) {
+        if (meet == cityA || meet == cityB || meet == cityC) {
+            continue;
+        }
+
+        vector<int> pathA = shortestPathById(graph, cityA, meet, n);
+        vector<int> pathB = shortestPathById(graph, cityB, meet, n);
+        vector<int> pathC = shortestPathById(graph, cityC, meet, n);
+
+        if (pathA.empty() || pathB.empty() || pathC.empty()) {
+            continue;
+        }
+
+        int total = static_cast<int>((pathA.size() - 1) + (pathB.size() - 1) + (pathC.size() - 1));
+
+        if (!found || total < bestTotal ||
+            (total == bestTotal && cityNameById(meet, city) < cityNameById(bestMeeting, city))) {
+            found = true;
+            bestMeeting = meet;
+            bestTotal = total;
+            bestPathA = pathA;
+            bestPathB = pathB;
+            bestPathC = pathC;
+        }
+    }
+
+    if (!found) {
+        cout << "There is no such a city." << endl;
+        return;
+    }
+
+    cout << "You three should meet at " << cityNameById(bestMeeting, city) << endl;
+    cout << "Route for first person: " << formatPathById(bestPathA, city)
+         << " (" << bestPathA.size() - 1 << " connections)" << endl;
+    cout << "Route for second person: " << formatPathById(bestPathB, city)
+         << " (" << bestPathB.size() - 1 << " connections)" << endl;
+    cout << "Route for third person: " << formatPathById(bestPathC, city)
+         << " (" << bestPathC.size() - 1 << " connections)" << endl;
+    cout << "Total number of connection: " << bestTotal << endl;
+}
+
 
 
 /*to map a city name with an unique integer */
@@ -198,6 +316,50 @@ int main(int argc, char *argv[]){
    cout << "-----------------------------------------------------------------------------------" << endl;
    graph.print();
 
-    // Q3 (Serene Plummer): start from City A (ID 0).
-    SolveQ3(graph, 0, n);
+    if (argc < 2) {
+        cout << "Usage: ./WA <question#> [args...]" << endl;
+        cout << "  Q3: ./WA 3 <city_A>" << endl;
+        cout << "  Q4: ./WA 4 <city_A> <city_B> <city_C>" << endl;
+        return 1;
+    }
+
+    int question = atoi(argv[1]);
+    if (question == 3) {
+        if (argc < 3) {
+            cout << "Usage: ./WA 3 <city_A>" << endl;
+            return 1;
+        }
+
+        string cityA = argv[2];
+        auto itA = city.find(cityA);
+        if (itA == city.end()) {
+            cout << "No route: start city not found." << endl;
+            return 0;
+        }
+        SolveQ3(graph, itA->second, n, city);
+    } else if (question == 4) {
+        if (argc < 5) {
+            cout << "Usage: ./WA 4 <city_A> <city_B> <city_C>" << endl;
+            return 1;
+        }
+
+        string cityA = argv[2];
+        string cityB = argv[3];
+        string cityC = argv[4];
+
+        auto itA = city.find(cityA);
+        auto itB = city.find(cityB);
+        auto itC = city.find(cityC);
+        if (itA == city.end() || itB == city.end() || itC == city.end()) {
+            cout << "There is no such a city." << endl;
+            return 0;
+        }
+
+        SolveQ4(graph, itA->second, itB->second, itC->second, n, city);
+    } else {
+        cout << "Unsupported question number. Use 3 or 4." << endl;
+        return 1;
+    }
+
+    return 0;
 }

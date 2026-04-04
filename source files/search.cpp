@@ -152,3 +152,53 @@ std::vector<std::string> question3(const Graph& g, const std::string& cityA) {
 
     return bestPath;
 }
+
+Question4Result question4(const Graph& g,
+                         const std::string& cityA,
+                         const std::string& cityB,
+                         const std::string& cityC) {
+    Question4Result best;
+
+    if (!g.hasCity(cityA) || !g.hasCity(cityB) || !g.hasCity(cityC)) {
+        return best;
+    }
+
+    if (cityA == cityB || cityA == cityC || cityB == cityC) {
+        return best;
+    }
+
+    std::vector<std::string> allCities = g.getAllCities();
+    bool hasCandidate = false;
+    int bestConnections = 0;
+
+    for (const std::string& candidate : allCities) {
+        if (candidate == cityA || candidate == cityB || candidate == cityC) {
+            continue;
+        }
+
+        std::vector<std::string> pathA = g.findShortestPath(cityA, candidate);
+        std::vector<std::string> pathB = g.findShortestPath(cityB, candidate);
+        std::vector<std::string> pathC = g.findShortestPath(cityC, candidate);
+
+        if (pathA.empty() || pathB.empty() || pathC.empty()) {
+            continue;
+        }
+
+        int total = static_cast<int>(pathA.size() - 1 + pathB.size() - 1 + pathC.size() - 1);
+
+        if (!hasCandidate || total < bestConnections ||
+            (total == bestConnections && candidate < best.meetingCity)) {
+            hasCandidate = true;
+            bestConnections = total;
+
+            best.found = true;
+            best.meetingCity = candidate;
+            best.routeA = pathA;
+            best.routeB = pathB;
+            best.routeC = pathC;
+            best.totalConnections = total;
+        }
+    }
+
+    return best;
+}

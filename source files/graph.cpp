@@ -81,6 +81,18 @@ std::vector<std::string> Graph::getNeighbors(const std::string& city) const {
     return {};
 }
 
+std::vector<std::string> Graph::getAllCities() const {
+    std::vector<std::string> cities;
+    cities.reserve(adjacencyList.size());
+
+    for (const auto& entry : adjacencyList) {
+        cities.push_back(entry.first);
+    }
+
+    std::sort(cities.begin(), cities.end());
+    return cities;
+}
+
 bool Graph::hasCity(const std::string& city) const {
     return adjacencyList.count(city) > 0;
 }
