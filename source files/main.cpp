@@ -25,6 +25,19 @@ void printPath(const std::vector<std::string>& path) {
     std::cout << "\n" << std::endl;
 }
 
+std::string formatPathForQuestion3(const std::vector<std::string>& path) {
+    std::string output;
+
+    for (size_t i = 0; i < path.size(); ++i) {
+        if (i > 0) {
+            output += " to ";
+        }
+        output += path[i];
+    }
+
+    return output;
+}
+
 std::string formatPathForQuestion4(const std::vector<std::string>& path) {
     std::string output;
 
@@ -81,8 +94,6 @@ int main(int argc, char* argv[]) {
             std::cout << std::string(70, '=') << "\n" << std::endl;
         }
     } else if (question == 3) {
-        // Question 3 - Serene Plummer
-        // Find a route that visits all reachable cities and returns to start with minimal connections
         if (argc < 3) {
             std::cerr << "\n  ERROR: Missing required arguments\n" << std::endl;
             std::cerr << "  Usage: routeSearch 3 <city_A>\n" << std::endl;
@@ -90,37 +101,18 @@ int main(int argc, char* argv[]) {
         }
 
         std::string startCity = argv[2];
-        
-        std::cout << "\n  QUESTION 3: Hamiltonian Cycle (Serene Plummer)" << std::endl;
-        std::cout << "  " << std::string(50, '-') << std::endl;
-        std::cout << "  Starting City: " << startCity << std::endl;
-        std::cout << "  Objective: Visit all reachable cities and return" << std::endl;
-        printSeparator();
 
-        // Show reachable cities
-        std::vector<std::string> reachable = getReachableCities(g, startCity);
-        if (reachable.empty()) {
-            std::cout << "\n  ERROR: Starting city not found in graph.\n" << std::endl;
-            return 1;
-        }
-
-        std::cout << "\n  Reachable Cities (" << reachable.size() << " total):" << std::endl;
-        std::cout << "  " << std::string(50, '-') << std::endl;
-        for (size_t i = 0; i < reachable.size(); i++) {
-            std::cout << "    " << (i + 1) << ". " << reachable[i] << std::endl;
-        }
-        printSeparator();
-        
         std::vector<std::string> route = question3(g, startCity);
-
         if (route.empty()) {
-            std::cout << "\n   No valid route found." << std::endl;
-            std::cout << "  Could not visit all reachable cities and return to start.\n" << std::endl;
+            std::cout << "There is no such a route." << std::endl;
         } else {
-            std::cout << "\n   Route Found!" << std::endl;
-            printPath(route);
-            std::cout << "  Total Hops: " << route.size() - 1 << std::endl;
-            std::cout << std::string(70, '=') << "\n" << std::endl;
+            int connections = static_cast<int>(route.size()) - 1;
+            if (route.size() == 2 && route.front() == route.back()) {
+                connections = 0;
+            }
+
+            std::cout << formatPathForQuestion3(route) << std::endl;
+            std::cout << "smallest number of connection: " << connections << std::endl;
         }
     } else if (question == 4) {
         // routeSearch 4 <city_A> <city_B> <city_C>

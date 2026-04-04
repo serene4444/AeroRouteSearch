@@ -5,6 +5,7 @@
 #include <iostream>
 #include <functional>
 #include <algorithm>
+#include <limits>
 
 // BFS finds the shortest path (fewest connections) between two cities.
 // We also check that the path length is under maxConnections.
@@ -93,64 +94,140 @@ std::vector<std::string> question3(const Graph& g, const std::string& cityA) {
         return {};
     }
 
-    std::unordered_set<std::string> reachable;
-    std::queue<std::string> q;
-    q.push(cityA);
-    reachable.insert(cityA);
+    std::vector<std::string> reachable = getReachableCities(g, cityA);
+    if (reachable.empty()) {
+        return {};
+    }
 
-    while (!q.empty()) {
-        std::string current = q.front();
-        q.pop();
+    if (reachable.size() == 1) {
+        return {cityA, cityA};
+    }
 
-        for (const std::string& next : g.getNeighbors(current)) {
-            if (reachable.insert(next).second) {
-                q.push(next);
+    std::unordered_map<std::string, int> indexOf;
+    for (int i = 0; i < static_cast<int>(reachable.size()); ++i) {
+        indexOf[reachable[i]] = i;
+    }
+
+    auto startIt = indexOf.find(cityA);
+    if (startIt == indexOf.end()) {
+        return {};
+    }
+
+    const int startIndex = startIt->second;
+    const int cityCount = static_cast<int>(reachable.size());
+    const int maskCount = 1 << cityCount;
+    const int inf = std::numeric_limits<int>::max() / 4;
+
+    std::vector<std::vector<int>> dist(cityCount, std::vector<int>(cityCount, inf));
+    std::vector<std::vector<std::vector<std::string>>> shortestPaths(
+        cityCount, std::vector<std::vector<std::string>>(cityCount)
+    );
+
+    for (int i = 0; i < cityCount; ++i) {
+        dist[i][i] = 0;
+        shortestPaths[i][i] = {reachable[i]};
+
+        for (int j = 0; j < cityCount; ++j) {
+            if (i == j) {
+                continue;
+            }
+
+            std::vector<std::string> path = g.findShortestPath(reachable[i], reachable[j]);
+            if (!path.empty()) {
+                dist[i][j] = static_cast<int>(path.size()) - 1;
+                shortestPaths[i][j] = path;
             }
         }
     }
 
+    std::vector<std::vector<int>> dp(maskCount, std::vector<int>(cityCount, inf));
+    std::vector<std::vector<int>> parentMask(maskCount, std::vector<int>(cityCount, -1));
+    std::vector<std::vector<int>> parentCity(maskCount, std::vector<int>(cityCount, -1));
 
+    const int startMask = 1 << startIndex;
+    dp[startMask][startIndex] = 0;
 
-    // Serene Plummer - Question 3: Find a route that visits all reachable cities and returns to start, with as few connections as possible. 
-    std::unordered_set<std::string> visited;
-    std::vector<std::string> path;
-    std::vector<std::string> bestPath;
-
-    std::function<void(const std::string&)> dfs = [&](const std::string& current) {
-        if (!bestPath.empty() && path.size() >= bestPath.size()) {
-            return;
+    for (int mask = 0; mask < maskCount; ++mask) {
+        if ((mask & startMask) == 0) {
+            continue;
         }
 
-        if (visited.size() == reachable.size()) {
-            for (const std::string& next : g.getNeighbors(current)) {
-                if (next == cityA) {
-                    std::vector<std::string> candidate = path;
-                    candidate.push_back(cityA);
-                    if (bestPath.empty() || candidate.size() < bestPath.size()) {
-                        bestPath = candidate;
-                    }
-                    break;
+        for (int current = 0; current < cityCount; ++current) {
+            if (dp[mask][current] >= inf) {
+                continue;
+            }
+
+            for (int next = 0; next < cityCount; ++next) {
+                if (mask & (1 << next)) {
+                    continue;
+                }
+
+                if (dist[current][next] >= inf) {
+                    continue;
+                }
+
+                int nextMask = mask | (1 << next);
+                int candidateCost = dp[mask][current] + dist[current][next];
+
+                if (candidateCost < dp[nextMask][next]) {
+                    dp[nextMask][next] = candidateCost;
+                    parentMask[nextMask][next] = mask;
+                    parentCity[nextMask][next] = current;
                 }
             }
-            return;
+        }
+    }
+
+    int fullMask = maskCount - 1;
+    int bestCost = inf;
+    int bestEnd = -1;
+
+    for (int end = 0; end < cityCount; ++end) {
+        if (dp[fullMask][end] >= inf || dist[end][startIndex] >= inf) {
+            continue;
         }
 
-        for (const std::string& next : g.getNeighbors(current)) {
-            if (reachable.count(next) && !visited.count(next)) {
-                visited.insert(next);
-                path.push_back(next);
-                dfs(next);
-                path.pop_back();
-                visited.erase(next);
-            }
+        int totalCost = dp[fullMask][end] + dist[end][startIndex];
+        if (totalCost < bestCost) {
+            bestCost = totalCost;
+            bestEnd = end;
         }
-    };
+    }
 
-    visited.insert(cityA);
-    path.push_back(cityA);
-    dfs(cityA);
+    if (bestEnd == -1) {
+        return {};
+    }
 
-    return bestPath;
+    std::vector<int> visitOrder;
+    int mask = fullMask;
+    int current = bestEnd;
+
+    while (current != -1) {
+        visitOrder.push_back(current);
+        int previousMask = parentMask[mask][current];
+        int previousCity = parentCity[mask][current];
+        mask = previousMask;
+        current = previousCity;
+    }
+
+    std::reverse(visitOrder.begin(), visitOrder.end());
+    visitOrder.push_back(startIndex);
+
+    std::vector<std::string> route;
+    for (size_t i = 0; i + 1 < visitOrder.size(); ++i) {
+        const std::vector<std::string>& segment = shortestPaths[visitOrder[i]][visitOrder[i + 1]];
+        if (segment.empty()) {
+            return {};
+        }
+
+        if (route.empty()) {
+            route = segment;
+        } else {
+            route.insert(route.end(), segment.begin() + 1, segment.end());
+        }
+    }
+
+    return route;
 }
 
 Question4Result question4(const Graph& g,

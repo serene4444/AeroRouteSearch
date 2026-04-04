@@ -81,6 +81,8 @@ std::vector<std::string> Graph::getNeighbors(const std::string& city) const {
     return {};
 }
 
+// Question 2 helper: get all cities in the graph
+
 std::vector<std::string> Graph::getAllCities() const {
     std::vector<std::string> cities;
     cities.reserve(adjacencyList.size());

@@ -34,6 +34,10 @@ WA usage:
   Q3: ./WA 3 <city_A>
   Q4: ./WA 4 <city_A> <city_B> <city_C>
 
+Q3 expected output format:
+  city_A to city_x to city_y ... to city_z to city_A
+  smallest number of connection: 4
+
 Q4 expected output format:
   You three should meet at city_D
   Route for first person: city_A to city_x ... to city_D (3 connections)
