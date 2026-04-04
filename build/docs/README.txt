@@ -1,3 +1,5 @@
+Comprehensive project documentation now lives in ../../README.md
+
 graphGen.cpp generate a directed graph with each node as a city
 and each edge as a flight service from one node to the
 other. The output is in the format of:
